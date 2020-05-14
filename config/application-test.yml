@@ -3,4 +3,4 @@ ENV: test
 
 mongodb_data_cloud:
   db: hq_data_cloud
-  host: mongodb://hq_data_cloud:hqlxhqdatacloud2019@dds-wz9542ab304a64a41.mongodb.rds.aliyuncs.com:3717,dds-wz9542ab304a64a42.mongodb.rds.aliyuncs.com:3717
+  host: xxxx

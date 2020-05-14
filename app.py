@@ -3,6 +3,7 @@ from flask import Flask
 from core.app import App
 from core.utils import auto_import_module
 
+os.environ['JAVA_HOME'] = 'C:\Program Files\Java\jdk1.8.0_251'
 app = Flask(__name__)
 
 # 这里放每个应用的视图包，自动加载，主要用于自定路径路由注册
