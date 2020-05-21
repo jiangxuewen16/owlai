@@ -1,4 +1,4 @@
-from pyspark.mllib.tree import DecisionTree
+from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession
 
 from app import app
@@ -34,3 +34,26 @@ def spark():
 
     result.show()
     spark.stop()
+
+
+@app.route("/hdfs")
+def hdfs():
+    input_uri = "mongodb://data-cloud-develop:123456@192.168.18.243:27017/hq_data_cloud"
+    # spark_conf = SparkConf().setAppName("hdfs").setMaster("spark://t3.dev:7077").set("spark.mongodb.input.uri", input_uri) \
+    # .set('spark.jars.packages', 'org.mongodb.spark:mongo-spark-connector_2.11:2.3.3') \
+    spark_session = SparkSession.builder.master("spark://t3.dev:7077").appName("hdfs") \
+        .config("spark.mongodb.input.uri", input_uri) \
+        .config('spark.jars.packages', 'org.mongodb.spark:mongo-spark-connector_2.11:2.4.1') \
+        .getOrCreate()
+
+
+    pipeline = "[{'$match': {'u_id': 1}}]"
+    result = spark_session.read.format('com.mongodb.spark.sql.DefaultSource').option("collection", "c_area").load()
+    collect = result.collect()
+    sc = spark_session.sparkContext
+
+    data = sc.parallelize(collect).filter(lambda x : x['area_type'] == "1").map(lambda x: {x['area_id']:x['area_name']}).collect()
+    spark_session.stop()
+    return {"data": data}
+    # print(type(collect))
+    # result.show()

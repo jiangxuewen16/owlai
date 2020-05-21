@@ -1,6 +1,6 @@
 flask==1.1.2
 pyyaml==5.3.1
 mongoengine==0.20.0
-hdfs==2.5.8
+# hdfs==2.5.8
 # hanlp==2.0.0a42
 pySpark==2.4.5
