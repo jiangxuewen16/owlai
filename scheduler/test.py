@@ -1,5 +1,10 @@
+import json
+
+from hdfs import Client, InsecureClient
 from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession
+import happybase
+from pyspark.sql.types import StructType, IntegerType, StringType
 
 from app import app
 from core import utils, config
@@ -11,6 +16,7 @@ from core import dbengine
 def hello_world():
     print(dir(dbengine))
     return {"name": config.get_config("APP_NAME"), "age": 12}
+
 
 @app.route('/mongo')
 def spark():
@@ -46,14 +52,48 @@ def hdfs():
         .config('spark.jars.packages', 'org.mongodb.spark:mongo-spark-connector_2.11:2.4.1') \
         .getOrCreate()
 
-
     pipeline = "[{'$match': {'u_id': 1}}]"
     result = spark_session.read.format('com.mongodb.spark.sql.DefaultSource').option("collection", "c_area").load()
     collect = result.collect()
     sc = spark_session.sparkContext
 
-    data = sc.parallelize(collect).filter(lambda x : x['area_type'] == "1").map(lambda x: {x['area_id']:x['area_name']}).collect()
+    data = sc.parallelize(collect).filter(lambda x: x['area_type'] == "1").map(lambda x: {x['area_id']: x['area_name']})
+    data.repartition(1).saveAsTextFile("hdfs://t3.dev:9000/huiqu/common/area.txt")
+
+    result = data.collect()
     spark_session.stop()
-    return {"data": data}
+    return {"data": result}
     # print(type(collect))
     # result.show()
+
+
+@app.route("/data")
+def get_data():
+    client = Client("http://t3.dev:50070", "hadoop")
+    # client = InsecureClient(url="http://t3.dev:50070", user="hadoop", root="/")
+    print(client.list("/huiqu/common/area.txt"))
+    with client.read("/huiqu/common/area.txt/part-00000") as read:
+        # print(read.read().decode('utf8'))
+        return {"data": read.read().decode('utf8')}
+
+
+@app.route("/hbase")
+def hbase():
+    host = 't3.dev'
+    # table name
+    table = 'test'
+    # 建立spark连接
+    spark = SparkSession.builder.master("spark://t3.dev:7077").appName("test") \
+        .getOrCreate()
+
+    connection = happybase.Connection(host)
+    table = connection.table(table)
+
+    # table.put(b'1234', {b'family:qual1': b'value1',
+    #                        b'family:qual2': b'value2'})
+    table.batch()
+
+    row = table.row('1234')
+    print(row)
+    print(row[b'uname:'])
+

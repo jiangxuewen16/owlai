@@ -7,6 +7,9 @@ from core.utils import auto_import_module
 # os.environ['JAVA_HOME'] = '/System/Library/Frameworks/JavaVM.framework/Versions/Current/Commands'
 # os.environ['PYSPARK_PYTHON'] = '/Library/Frameworks/Python.framework/Versions/3.7'
 os.environ['PYSPARK_PYTHON'] = '/usr/local/bin/python3.7'
+os.environ['HADOOP_USER_NAME'] = 'hadoop'
+# os.environ['HADOOP_CONF_DIR'] = '/usr/local/hadoop/etc/hadoop'
+# os.environ['HADOOP_CLASSPATH'] = '/usr/local/hadoop:/usr/local/hbase/lib/*'
 
 app = Flask(__name__)
 
