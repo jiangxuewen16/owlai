@@ -1,10 +1,13 @@
 import json
+import os
 
 from hdfs import Client, InsecureClient
 from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession
 import happybase
 from pyspark.sql.types import StructType, IntegerType, StringType
+from pyspark.streaming import StreamingContext
+from pyspark.streaming.kafka import KafkaUtils
 
 from app import app
 from core import utils, config
@@ -96,4 +99,28 @@ def hbase():
     row = table.row('1234')
     print(row)
     print(row[b'uname:'])
+
+@app.route('/streaming')
+def streaming():
+    os.environ['PYSPARK_SUBMIT_ARGS'] = '--jars spark-streaming-kafka-assembly_2.10-1.6.0.jar pyspark-shell'
+    spark = SparkSession.builder.master("spark://t3.dev:7077").appName("test") \
+        .config('spark.jars.packages', 'org.apache.spark:spark-streaming-kafka-0-8-assembly_2.11:2.4.5') \
+        .getOrCreate()
+
+    print(dir(spark._jvm))
+
+    ssc = StreamingContext(spark.sparkContext, 5)
+
+    kafkaParams = {"bootstrap_servers": "t3.dev:9092",
+                   "kafka.bootstrap.servers": "t3.dev:9092",
+                   "brokers": "t3.dev:9092",
+                   "host": "t3.dev:9092"}
+    topics = {'spark-test': 1}
+    lines = KafkaUtils.createStream(ssc, 't3.dev:2181', 'local-test', topics, kafkaParams)
+    print(lines.pprint(10))
+
+    ssc.start()
+    ssc.awaitTermination(60)
+
+
 
