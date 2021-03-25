@@ -1,5 +1,5 @@
 flask==1.1.2
-pyyaml==5.3.1
+pyyaml==5.4
 mongoengine==0.20.0
 hdfs==2.5.8
 # hanlp==2.0.0a42
